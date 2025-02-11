@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS job_ad_users (
+  id SERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  username VARCHAR(255) NOT NULL
+);
