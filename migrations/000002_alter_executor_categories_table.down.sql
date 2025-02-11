@@ -1,0 +1,5 @@
+ALTER TABLE executor_categories
+DROP COLUMN id CASCADE;
+
+ALTER TABLE executor_categories
+ADD COLUMN id uuid PRIMARY KEY;
