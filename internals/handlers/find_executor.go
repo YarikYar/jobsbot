@@ -17,16 +17,14 @@ func (h *HandlerList) HandleFindExecutor(c tele.Context, state *redis.StateData)
 	if err != nil {
 		return err
 	}
-	var buttons []tele.Btn
-	for _, category := range categories {
-		buttons = append(buttons, tele.Btn{Text: category.Name, Data: category.Data})
-	}
 	menu := &tele.ReplyMarkup{}
-	menu.Inline(
-		menu.Row(buttons...),
-		menu.Row(tele.Btn{Text: "Другое ✏️", Data: "!ec_other"}),
-		menu.Row(tele.Btn{Text: "Назад ↩️", Data: "back"}),
-	)
+	var rows []tele.Row
+	for _, category := range categories {
+		rows = append(rows, menu.Row(tele.Btn{Text: category.Name, Data: category.Data}))
+	}
+	rows = append(rows, menu.Row(tele.Btn{Text: "Другое ✏️", Data: "!ec_other"}))
+	rows = append(rows, menu.Row(tele.Btn{Text: "Назад ↩️", Data: "back"}))
+	menu.Inline(rows...)
 	h.stateManager.SetSessionData(c.Sender().ID, map[string]interface{}{"type": "select_executor"})
 	c.Bot().Edit(&tele.Message{Chat: &tele.Chat{ID: c.Sender().ID}, ID: messageId}, `Выберите категорию услуги, которые вам необходимы:`, menu)
 	return nil
@@ -41,20 +39,27 @@ func (h *HandlerList) HandleExecutorCategory(c tele.Context, state *redis.StateD
 	if err != nil {
 		return err
 	}
-	session["category"] = c.Callback().Data
+	session["category"], err = h.db.GetExecutorCategoryName(c.Callback().Data)
+  if err != nil {
+    return err
+  }
 	h.stateManager.SetSessionData(c.Sender().ID, session)
 	fmt.Println(session)
 
+	spheres, err := h.db.GetExecutorSpheres(c.Callback().Data)
+	if err != nil {
+		return err
+	}
+	
 	menu := &tele.ReplyMarkup{}
-	menu.Inline(
-		menu.Row(tele.Btn{Text: "Разовый заказ 🎯", Data: "et_onetime"}),
-		menu.Row(tele.Btn{Text: "Несколько заказов (единоразово) 📦📦", Data: "et_many_one"}),
-		menu.Row(tele.Btn{Text: "Удаленная вакансия (в штат) 💼👨‍💻", Data: "et_remote"}),
-		menu.Row(tele.Btn{Text: "Сотрудничество (1 заказ в месяц) 🤝📅", Data: "et_collaboration"}),
-		menu.Row(tele.Btn{Text: "Сотрудник в проект 👥🚀", Data: "et_project"}),
-		menu.Row(tele.Btn{Text: "Назад ↩️", Data: "back"}),
-	)
-	_, err = c.Bot().Edit(&tele.Message{Chat: &tele.Chat{ID: c.Sender().ID}, ID: messageId}, `Выберите, для каких целей вам нужен исполнитель:`, menu)
+	var rows []tele.Row
+
+  for _, sphere := range spheres {
+    rows = append(rows, menu.Row(tele.Btn{Text: sphere.Name, Data: sphere.Uniq}))
+  }
+  rows = append(rows, menu.Row(tele.Btn{Text: "Назад ↩️", Data: "back"}))
+	menu.Inline(rows...)
+	_, err = c.Bot().Edit(&tele.Message{Chat: &tele.Chat{ID: c.Sender().ID}, ID: messageId}, `Выберите сферу услуги:`, menu)
 	return err
 }
 
@@ -78,10 +83,11 @@ func (h *HandlerList) HandleExecutorCategoryOtherName(c tele.Context, state *red
 		return err
 	}
 	session["category"] = c.Message().Text
+	session["sphere"] = "Другая"
 	h.stateManager.SetSessionData(c.Sender().ID, session)
 	fmt.Println(session)
 	c.Delete()
-	menu := &tele.ReplyMarkup{}
+menu := &tele.ReplyMarkup{}
 	menu.Inline(
 		menu.Row(tele.Btn{Text: "Разовый заказ 🎯", Data: "et_onetime"}),
 		menu.Row(tele.Btn{Text: "Несколько заказов (единоразово) 📦📦", Data: "et_many_one"}),
@@ -92,6 +98,34 @@ func (h *HandlerList) HandleExecutorCategoryOtherName(c tele.Context, state *red
 	)
 	_, err = c.Bot().Edit(&tele.Message{Chat: &tele.Chat{ID: c.Sender().ID}, ID: messageId}, `Выберите, для каких целей вам нужен исполнитель:`, menu)
 	return err
+}
+
+func (h *HandlerList) HandleExecutorSphere(c tele.Context, state *redis.StateData) error{
+	messageId, err := h.stateManager.GetMessageId(c.Sender().ID)
+	if err != nil {
+		return err
+	}
+  session, err := h.stateManager.GetSessionData(c.Sender().ID)
+  if err != nil {
+    return err
+  }
+  session["sphere"], err = h.db.GetExecutorSphereName(c.Callback().Data)
+	if err != nil {
+		return err
+	}
+  h.stateManager.SetSessionData(c.Sender().ID, session)
+  fmt.Println(session)
+	menu := &tele.ReplyMarkup{}
+	menu.Inline(
+		menu.Row(tele.Btn{Text: "Разовый заказ 🎯", Data: "et_onetime"}),
+		menu.Row(tele.Btn{Text: "Несколько заказов (единоразово) 📦📦", Data: "et_many_one"}),
+		menu.Row(tele.Btn{Text: "Удаленная вакансия (в штат) 💼👨‍💻", Data: "et_remote"}),
+		menu.Row(tele.Btn{Text: "Сотрудничество (1 заказ в месяц) 🤝📅", Data: "et_collaboration"}),
+		menu.Row(tele.Btn{Text: "Сотрудник в проект 👥🚀", Data: "et_project"}),
+		menu.Row(tele.Btn{Text: "Назад ↩️", Data: "back"}),
+	)
+  _, err = c.Bot().Edit(&tele.Message{Chat: &tele.Chat{ID: c.Sender().ID}, ID: messageId}, `Выберите, для каких целей вам нужен исполнитель:`, menu)
+  return err
 }
 
 func (h *HandlerList) HandleExecutorTarget(c tele.Context, state *redis.StateData) error {

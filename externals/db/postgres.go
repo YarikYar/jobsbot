@@ -33,3 +33,21 @@ func (db *DB) GetExecutorCategories() ([]models.ExecutorCategory, error) {
 	err := db.db.Select(&categories, "SELECT id, name, data FROM executor_categories")
 	return categories, err
 }
+
+func (db *DB) GetExecutorCategoryName(data string) (string, error) {
+  var name string
+  err := db.db.Get(&name, "SELECT name FROM executor_categories WHERE data = $1", data)
+  return name, err
+}
+func (db *DB) GetExecutorSpheres(category string) ([]models.ExecutorSphere, error) {
+  var spheres []models.ExecutorSphere
+  err := db.db.Select(&spheres, "SELECT es.id, es.name, es.uniq, hash FROM executor_spheres es INNER JOIN executor_categories ec ON es.parent_category = ec.id WHERE ec.data = $1", category)
+  return spheres, err
+}
+
+func (db *DB) GetExecutorSphereName(uniq string) (string, error) {
+  var name string
+  err := db.db.Get(&name, "SELECT name FROM executor_spheres WHERE uniq = $1", uniq)
+  return name, err
+}
+

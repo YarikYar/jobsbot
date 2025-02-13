@@ -42,6 +42,8 @@ func (b *Bot) RegisterHandlers() {
     return strings.HasPrefix(state, "et_")
   }, b.handlers.HandleExecutorTarget)
 	b.handlers.AddCallback("!ec_other", b.handlers.HandleExecutorCategoryOther)
+	b.handlers.AddCallbackFilter("es", func (name string, state string) bool {
+    return strings.HasPrefix(state, "es_")	}, b.handlers.HandleExecutorSphere)
   b.handlers.AddText("wait_executor_category", b.handlers.HandleExecutorCategoryOtherName)
 	b.handlers.AddText("executor_title", b.handlers.HandleExecutorTitle)
   b.handlers.AddText("executor_budget", b.handlers.HandleExecutorBudget)
