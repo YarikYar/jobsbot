@@ -50,12 +50,18 @@ func (b *Bot) RegisterHandlers() {
 	b.handlers.AddText("executor_description", b.handlers.HandleExecutorDescription)
   b.handlers.AddText("executor_skills", b.handlers.HandleExecutorSkills)
 
+	// Now service RegisterHandlers()
+	b.handlers.AddCallback("find_orders", b.handlers.HandleOfferService)
+	b.handlers.AddCallback("!oc_other", b.handlers.HandleOfferCategoryOther)
+	b.handlers.AddText("wait_offer_category", b.handlers.HandleOfferCategoryOtherName)
+	b.handlers.AddText("offer_name", b.handlers.HandleOfferName)
 }
 
 func (b *Bot) Run() error {
 	b.bot.Handle("/restart", func(c tele.Context) error {
 		b.stateManager.ClearState(c.Sender().ID)
     b.stateManager.ClearSessionData(c.Sender().ID)
+		b.stateManager.SetSessionData(c.Sender().ID, map[string]interface{}{})
 		b.stateManager.DeleteMessageId(c.Sender().ID)
 		return c.Send("State cleared")
 	})
@@ -90,7 +96,7 @@ func (b *Bot) Run() error {
 				return handler.Handler(c, state)
 			}
 		}
-		return nil
+return nil
 	})
 
 	b.bot.Start()

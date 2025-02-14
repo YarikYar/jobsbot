@@ -51,3 +51,16 @@ func (db *DB) GetExecutorSphereName(uniq string) (string, error) {
   return name, err
 }
 
+
+func (db *DB) GetOfferCategories() ([]models.OfferCategory, error) {
+  var categories []models.OfferCategory
+  err := db.db.Select(&categories, "SELECT id, name, data, hash FROM offer_categories")
+  return categories, err
+}
+
+func (db *DB) GetOfferCategoryName(data string) (string, error) {
+  var name string
+  err := db.db.Get(&name, "SELECT name FROM offer_categories WHERE data = $1", data)
+  return name, err
+}
+
