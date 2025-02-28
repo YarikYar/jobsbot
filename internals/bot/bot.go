@@ -52,9 +52,19 @@ func (b *Bot) RegisterHandlers() {
 
 	// Now service RegisterHandlers()
 	b.handlers.AddCallback("find_orders", b.handlers.HandleOfferService)
+  b.handlers.AddCallbackFilter("oc", func(name string, state string) bool {
+    return strings.HasPrefix(state, "oc_")
+  }, b.handlers.HandleOfferCategory)
 	b.handlers.AddCallback("!oc_other", b.handlers.HandleOfferCategoryOther)
 	b.handlers.AddText("wait_offer_category", b.handlers.HandleOfferCategoryOtherName)
 	b.handlers.AddText("offer_name", b.handlers.HandleOfferName)
+	b.handlers.AddText("wait_offer_portfolio", b.handlers.HandleOfferPortfolio)
+	b.handlers.AddCallback("no_portfolio", b.handlers.HandleOfferPortfolio)
+	b.handlers.AddText("wait_offer_minimal_order", b.handlers.HandleOfferMinimalOrder)
+	b.handlers.AddCallback("no_minimal_order", b.handlers.HandleOfferMinimalOrder)
+	b.handlers.AddText("wait_offer_cv", b.handlers.HandleOfferCV)
+	b.handlers.AddText("wait_offer_stack", b.handlers.HandleOfferStack)
+	b.handlers.AddText("wait_offer_payment", b.handlers.HandleOfferPayment)
 }
 
 func (b *Bot) Run() error {
