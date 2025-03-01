@@ -65,6 +65,11 @@ func (b *Bot) RegisterHandlers() {
 	b.handlers.AddText("wait_offer_cv", b.handlers.HandleOfferCV)
 	b.handlers.AddText("wait_offer_stack", b.handlers.HandleOfferStack)
 	b.handlers.AddText("wait_offer_payment", b.handlers.HandleOfferPayment)
+
+	b.handlers.AddCallback("my_posts", b.handlers.HandleMyPosts)
+	b.handlers.AddCallbackFilter("mp", func(name string, state string) bool {
+    return strings.HasPrefix(state, "del_")
+	}, b.handlers.HandleDeletePost)
 }
 
 func (b *Bot) Run() error {

@@ -5,6 +5,7 @@ import (
 	"unicode/utf8"
 
 	"boutonsjob/externals/redis"
+	"boutonsjob/internals/models"
 
 	tele "gopkg.in/telebot.v4"
 )
@@ -39,7 +40,7 @@ func (h *HandlerList) HandleOfferCategory(c tele.Context, state *redis.StateData
 	if err != nil {
 		return err
 	}
-	session["category"], err = h.db.GetOfferCategoryName(c.Callback().Data)
+	session["category"], err = h.db.GetOfferCategoryHash(c.Callback().Data)
 	if err != nil {
 		return err
 	}
@@ -140,6 +141,7 @@ func (h *HandlerList) HandleOfferMinimalOrder(c tele.Context, state *redis.State
       return err
 		} else {
       session["minimal_order"] = c.Message().Text
+			c.Delete()
 		}
 	}
   h.stateManager.SetSessionData(c.Sender().ID, session)
@@ -231,6 +233,11 @@ func (h *HandlerList) HandleOfferPayment(c tele.Context, state *redis.StateData)
 	menu.Inline(
     menu.Row(tele.Btn{Text: "В главное меню", Data: "start"}),
 	)
+	dbEntry := models.Post{Type: "Резюме", Title: session["name"].(string), Link: fmt.Sprintf("https://t.me/zylogbot/%d", post.ID), MessageId: post.ID, UserId: c.Sender().ID}
+	err = h.db.AddPost(dbEntry)
+	if err != nil {
+		return err
+	}
 	_, err = c.Bot().Edit(&tele.Message{Chat: &tele.Chat{ID: c.Sender().ID}, ID: messageId}, fmt.Sprintf(`Ваше резюме размещено: <a href='https://t.me/zylogbot/%d'>Посмотреть пост</a>`, post.ID), &tele.SendOptions{ParseMode: tele.ModeHTML}, menu)
 	return err
 }

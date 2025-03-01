@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"boutonsjob/externals/redis"
+	"boutonsjob/internals/models"
 
 	tele "gopkg.in/telebot.v4"
 )
@@ -234,6 +235,11 @@ func (h *HandlerList) HandleExecutorSkills(c tele.Context, state *redis.StateDat
 	menu.Inline(
     menu.Row(tele.Btn{Text: "В главное меню", Data: "start"}),
 	)
+dbEntry := models.Post{Type: "Объявление", Title: session["name"].(string), Link: fmt.Sprintf("https://t.me/zylogbot/%d", post.ID), MessageId: post.ID}
+	err = h.db.AddPost(dbEntry)
+	if err != nil {
+		return err
+	}
 	_, err = c.Bot().Edit(&tele.Message{Chat: &tele.Chat{ID: c.Sender().ID}, ID: messageId}, fmt.Sprintf(`Ваше объявление размещено: <a href='https://t.me/zylogbot/%d'>Посмотреть пост</a>`, post.ID), &tele.SendOptions{ParseMode: tele.ModeHTML}, menu)
 	return err
 }
